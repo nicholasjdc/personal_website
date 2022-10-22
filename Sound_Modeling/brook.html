@@ -9,6 +9,32 @@
 <body>
   <button id = 'babble'>Play</button>
   <p>Babbling Brook</p>
+  <embed src="AudioDiagram2.pdf" width="500" height="375" 
+ type="application/pdf">
+<p></p>
+ <p>Constructing the phone buttons and dialtone were initially 
+  straightforward, allowing me to simply follow the diagram 
+  provided in the textbook. Taking inspirations from the 
+  dialtone, I then modified the buttons with the bypass 
+  filters from the dialtone, as those filters were initially 
+  meant to replicate the material limitations on the tone, 
+  which would logically follow to the phone buttons. The
+  dialtone sounded off with the clip which I had initially 
+  implemented, but I wanted some "staticy" sound which was
+  similar. I then implemented some low shelf white noise
+  directly into the output, but found it did not fit with the 
+  tone. I then tried feeding the white noise into the secondary
+  bypass filter, which sounded ok, but too one-note. I then added
+  in highshelf filter, which felt somewhat better but negligibly so.
+  I then played around with a variety of filters, and landed on the peaking
+  filter, as I liked the texture of the noise, like slipping
+  sand. For whatever reason it sounded more right for me
+  to pass the high and low shelf filters into the peaking, so I
+  ended up with white noise being passed into a low and high shelf filter,
+  both of them being passed into a peaking filter, and finally 
+  ending up in the bpFilter2. While I feel like the sound sounds
+  more realistic at lower volumes, when listening closely at 
+  higher volumes it feels even more wrong than without any white noise.</p>
 </body>
 <script src="brook.js"> </script>
 </html>
