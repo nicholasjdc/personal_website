@@ -1,0 +1,11 @@
+a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+
+    text-decoration: blue;
+    color: green;
+}
+a.form {
+    color: green;
+}    
