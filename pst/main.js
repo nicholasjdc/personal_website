@@ -14,6 +14,7 @@ to generate a composition. The user should be able to change some aspect of the 
 
 You do not need to implement a normalization procedure. You can assume the input pitch set classes are already in normal form.
 */
+iteration = 0
 const noteFrequencyMap = {
     'A': 440.000000000000000,  //N - A
     'As': 466.163761518089916, //J - A#
@@ -30,32 +31,39 @@ const noteFrequencyMap = {
 }
 
 pitchSetOrientation = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B']
-setClass = [0, 2, 4, 5]
-
+globalSetClass= []
 //Movement functions
 //Assume clockwise movement
 
 //set Generation functions
 //Start w/ pitchClass Set, start w/ genSetClass
 //Temporarily ignore normalization procedure
-function play(sequence, pitchSetOrientation){
+function play(setClass, localIter){
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    ps = document.getElementById("pitchSequence").value
-    pitchSequence = ps.split(' ')
+   
     
-    pitchClassSet = genPitchClassSet(pitchSequence)
-    console.log(pitchClassSet)
-    setClass2 = genSetClass(pitchClassSet)
-    
+    randomAdjustment = randomIntFromInterval(1,3)
+    if(randomAdjustment == 1){
+        pitchSetOrientation = ccTranspose(pitchSetOrientation)
+        drawDihedral()
+    }else if(randomAdjustment == 2){
+        pitchSetOrientation = inverse(pitchSetOrientation)
+        drawDihedral()
+
+    }else{
+        pitchSetOrientation = retrograde(pitchSetOrientation)
+        drawDihedral()
+    }
 
     osc = audioCtx.createOscillator();
     gainNode = audioCtx.createGain();
     osc.connect(gainNode).connect(audioCtx.destination);
     osc.start()
     gainNode.gain.value = 0;
-    genNotes(sequence, pitchSetOrientation);
+    genNotes(setClass, localIter);
 }
-function genNotes(sequence, pitchSetOrientation){
+function genNotes(sequence, localIter){
+    console.log("GENNOTES")
     currentLength = 0
     sequence.forEach(interval =>{
         newDuration = 0.2+Math.random()/2
@@ -69,23 +77,33 @@ function genNotes(sequence, pitchSetOrientation){
         playNote(note)
         
     });
-
+    console.log(currentLength)
+    console.log("ITERATION: " + iteration)
+    console.log("LOCALITERATION: " + localIter)
+    if(iteration == localIter){
+        setTimeout(() =>play(sequence, localIter), currentLength*1000)
+    }
 }
 function playNote(note){
         offset = 1
         gainNode.gain.setTargetAtTime(0.8, note.startTime+offset, .01)
        osc.frequency.setTargetAtTime(note.pitch, note.startTime+offset, 0.001)
        gainNode.gain.setTargetAtTime(0, note.endTime+offset-0.05, .001)
-       //delete activeNotes[note.id]
- //return valid array of pitches    
-
+      
 }
 function genPitchClassSet(pitchSet){
     pitchClassSet = []
-    
-    pitchSequence.forEach(el=>{
+    console.log("PITCHSET")
+    console.log(pitchSet)
+    pitchSet.forEach(el=>{
+        pitchSetOrientation.forEach((p, id)=>{
+            if(el[0]==p){
+                console.log("FOUND")
+                console.log(id)
+                pitchClassSet.push(id)
 
-        pitchSet.push(pitchSetOrientation.findIndex(element => element== el))
+            }
+        })
     });
     return pitchClassSet
 }
@@ -134,13 +152,19 @@ function inverse(sequence){
 }
 */
 function retrograde(sequence){
-    newSequence = []
-    for(let i=sequence.length-1; i > -1; i--){
-        newSequence.push(sequence[i])
+    console.log("GLOBAL SET CLASS: " + globalSetClass)
+    newSequence = sequence
+    lastEntry = globalSetClass[globalSetClass.length-1]
+
+    rotNumber = sequence.length-lastEntry
+
+    for (i=0; i<lastEntry;i++){
+        newSeqeunce = ccTranspose(newSequence)
     }
-
+    console.log(sequence)
+    newSequence = inverse(newSequence)
+    console.log(sequence)
     return newSequence
-
 }
 
 //Id function taken from stack overflow
@@ -199,8 +223,13 @@ const inverseButton = document.getElementById("inverse")
 const retrogradeButton = document.getElementById("retrograde")
 
 playButton.addEventListener('click', function(){
-    setClass =  genSetClass(setClass)
-    play(setClass, pitchSetOrientation)
+    ps = document.getElementById("pitchSequence").value
+    pitchSequence = ps.split(' ')
+    
+    pitchClassSet = genPitchClassSet(pitchSequence)
+    globalSetClass = genSetClass(pitchClassSet)
+    iteration++
+    play(globalSetClass, iteration)
 }, false);
 
 transposeButton.addEventListener('click', function() {
@@ -213,12 +242,14 @@ inverseButton.addEventListener('click', function() {
 }, false);
 
 retrogradeButton.addEventListener('click', function() {
-    setClass = retrograde(setClass)
-    document.getElementById("setClass").innerHTML = "Current Set Class {"+ setClass + "}"
-
+    pitchSetOrientation = retrograde(pitchSetOrientation)
+    drawDihedral()
 }, false);
 
-
+//STACK OVERFLOW SECTION
+function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min)
+  }
 //VISUALS
 drawDihedral()
 function drawDihedral(){
