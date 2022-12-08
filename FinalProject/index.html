@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf‐8">
+  <title> Felix Goes on a Walk</title>
+
+</head>
+<link rel="stylesheet" href="table.css">
+
+<body>
+  <div style="display:none;">
+    <img id="bird" src="images/bird_flock.png" />
+    <img id="felix" src="images/Felix.png" />
+    <img id="dog" src="images/dog.png"  />
+    <img id="cricket" src="images/cricket.png"  />
+
+  </div>
+  <div class="row">
+    <div class ="column">
+      <button id="start">Start/Reset</button>
+      <p>WALKER DETAILS</p>
+      <p id = "walkerposition"></p>
+
+      <input id = "walkspeed" value = "1"> Walking Speed </input>
+      <p></p>
+      <input id = "walksize" value = "0.1"> Step Length </input>
+      <p></p>
+
+      <input id = "walktype" value = "wood_step"> Footstep Type </input>
+      <p></p>
+
+      <input id = "xywalkangle" value = "0"> XY Angle </input>
+      <p></p>
+      <input id = "yzwalkangle" value = "0"> YZ Angle </input>
+      <p></p>
+
+      <input id = "walkgain" value = "1"> Walk Gain </input>
+      <p></p>
+      <button id = "updatewalk">Update Walk</button>
+      <p>OBJECT DETAILS</p>
+      <input id = "objectspeed" value = "1"> Rest between sound</input>
+      <p></p>
+      <input id = "objecttype" value = "bird_chirp"> Type </input>
+      <p></p>
+      <input id = "objectgain" value = "1"> Gain </input>
+      <p></p>
+      <input id = "objectx" value = "1"> X</input>
+      <p></p>
+      <input id = "objecty" value = "1"> Y </input>
+      <p></p>
+      <input id = "objectz" value = "1"> Z </input>
+      <p></p>
+      <button id="addobject">Add Object</button>
+      <p></p>
+
+      <label for="object-list">Object List</label>
+      <div id="object-list"></div>
+    
+    </div>
+
+    <div class = "column">
+      <p>X-PLANE</p>
+      <canvas id="xCanvas" width="500" height="200"
+        style="border:1px solid #d3d3d3;">
+        Your browser does not support the HTML5 canvas tag.
+      </canvas>
+
+      <p>Y-PLANE</p>
+      <canvas id="yCanvas" width="500" height="200"
+        style="border:1px solid #d3d3d3;">
+        Your browser does not support the HTML5 canvas tag.
+      </canvas>
+
+      <p>Z-PLANE</p>
+      <canvas id="zCanvas" width="500" height="200"
+        style="border:1px solid #d3d3d3;">
+        Your browser does not support the HTML5 canvas tag.
+      </canvas>
+
+   </div>
+  </div>
+</body>
+<script src="main.js"> </script>
+</html>
