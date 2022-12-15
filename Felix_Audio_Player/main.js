@@ -1,181 +1,349 @@
+var audioCtx
+var activeWalker = {}
+var activeSounds = {}
+var walkerPosition = {'x':0,'y':0,'z':0} //store 'x', 'y', and 'z' velocity of the walker
+var globalSampleNumber = 0
 
-var audioCtx;
+const walkspeed = document.getElementById("walkspeed")
+const walksize = document.getElementById("walksize")
+const walktype = document.getElementById("walktype")
+const xywalkangle = document.getElementById("xywalkangle")
+const yzwalkangle = document.getElementById("yzwalkangle")
 
+const walkgain = document.getElementById('walkgain')
+const addObject = document.getElementById("addobject")
 
-activeTimeOuts = {}
-deleteTimeOuts = {}
-iterCounter =0;
+const objectspeed = document.getElementById("objectspeed")
+const objecttype = document.getElementById('objecttype')
+const objectgain = document.getElementById('objectgain')
+const objectx = document.getElementById('objectx')
+const objecty = document.getElementById('objecty')
+const objectz = document.getElementById('objectz')
+const addobject = document.getElementById('addobject')
 
-var qi = document.getElementById("qi")    
-var ci = document.getElementById("ci")  
-var error = document.getElementById("error")    
+const walkerposP = document.getElementById('walkerposition')
+const updatewalk = document.getElementById('updatewalk') //button
 
+const displayWidth = 20
+//TO-DO:
+//VISUALISATION: Make sure that each img tied to unique img id, delete img if not match 
 
+//CHANGE WALKER BUTTON:
+//No longer stops walk, just updates with current values
+//start walk on startup
 
-async function loadBuffer(bufferURL) {
-  try{
-    const response = await fetch(bufferURL);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    return audioBuffer;
-  }catch{
-    console.log("Error")
+//WALKER FUNCTIONS
+initAudio()
+generateWalker(getWalkerElements())
+async function generateWalker(walkerData){
+    globalSampleNumber++
 
-    return null;
-  }
+    console.log("WALKER DATA: " + walkerData)
+    let pace = walkerData['pace'] 
+    let sample = walkerData['sample']
+    let stepSize = walkerData['stepSize']
+    let xyrot = parseFloat(walkerData['xyangle'])
+    let yzrot = parseFloat(walkerData['yzangle'])
+
+    xAngle = stepSize * Math.cos(xyrot * Math.PI /180)
+    yAngle = stepSize * Math.sin(xyrot * Math.PI /180) * Math.cos(yzrot * Math.PI /180)
+    zAngle = stepSize * Math.sin(yzrot * Math.PI /180)
+
+    console.log('xyrot: ' + xyrot + 'cos(xyrot): ' +Math.cos(xyrot))
+    var audioBuffer = await loadSample(sample);
+    
+    var walkGain = audioCtx.createGain()
+    walkGain.gain.setValueAtTime(walkerData['gain'], audioCtx.currentTime)
+    walkGain.connect(audioCtx.destination)
+
+    activeWalker = {'audioBuffer': audioBuffer, 
+    'sleep': pace, 'gainNode': walkGain, 'stepSize': stepSize, 
+    'xAngle': xAngle, 'yAngle':yAngle, 'zAngle': zAngle}
+    console.log('xangle: ' + xAngle)
+    playWalker()
+    updateWalkerPosition()
+
 }
-const playButton = document.querySelector('button');
 
-playButton.addEventListener('click', async function () {
+async function updateWalkerPosition(){ //pace, footstep_type(tbd), angle(tbd)
+    //Add universal walker rate that this can be reset by 
+    console.log("updatePosition")
+    let pace = activeWalker['sleep']
 
+    walkerPosition['x'] += activeWalker['xAngle']
+    walkerPosition['y'] += activeWalker['yAngle']
+    walkerPosition['z'] += activeWalker['zAngle']
+
+    updateWalkerWriting()
+    checkRelativeDistance()
+    setTimeout(function(){updateWalkerPosition()}, pace*1000)
+    
+}
+
+
+async function playWalker(){
+    console.log("PLAY")
+
+    const source = audioCtx.createBufferSource();
+    let walkGain = activeWalker['gainNode']
+    source.buffer = activeWalker['audioBuffer']
+    source.connect(walkGain)
+    source.start(audioCtx.currentTime);
+    sleepValue = activeWalker['sleep']
+    setTimeout(function(){playWalker()}, sleepValue*1000)
+
+}
+async function updateWalker(walkerData){
+    globalSampleNumber++
+
+    console.log("WALKER DATA: " + walkerData)
+    let pace = walkerData['pace'] 
+    let sample = walkerData['sample']
+    let stepSize = walkerData['stepSize']
+    let xyrot = parseFloat(walkerData['xyangle'])
+    let yzrot = parseFloat(walkerData['yzangle'])
+
+    xAngle = stepSize * Math.cos(xyrot * Math.PI /180)
+    yAngle = stepSize * Math.sin(xyrot * Math.PI /180) * Math.cos(yzrot * Math.PI /180)
+    zAngle = stepSize * Math.sin(yzrot * Math.PI /180)
+
+    console.log('xyrot: ' + xyrot + 'cos(xyrot): ' +Math.cos(xyrot))
+
+    var audioBuffer = await loadSample(sample);
+    //CHANGE walk gain adjustment
+    var walkGain = audioCtx.createGain()
+    walkGain.gain.setValueAtTime(walkerData['gain'], audioCtx.currentTime)
+    walkGain.connect(audioCtx.destination)
+
+    activeWalker = {'audioBuffer': audioBuffer, 
+    'sleep': pace, 'gainNode': walkGain, 'stepSize': stepSize, 
+    'xAngle': xAngle, 'yAngle':yAngle, 'zAngle': zAngle}
+    console.log('xangle: ' + xAngle)
+
+}
+//SOUND FUNCTIONS
+
+async function generateSound(soundData){ //instantiate sound, reading from the add input field
+    
+    //replace all 'sounddata' instances with fields from html
+    //add data to active sounds
+    //pass panner data to play sound -- play sound will recursively call the sound
+    //play sound j alters spanner position
+    globalSampleNumber++
+
+    let sample = soundData['sample']
+    let x = parseFloat(soundData['x'])
+    let y = parseFloat(soundData['y'])
+    let z = parseFloat(soundData['z'])
+
+    const panner = new PannerNode(audioCtx);
+    panner.panningModel = 'HRTF';
+    panner.positionX.value = parseFloat(soundData['x']) - walkerPosition['x']
+    panner.positionY.value = parseFloat(soundData['y']) - walkerPosition['y']
+    panner.positionZ.value = parseFloat(soundData['z']) - walkerPosition['z']
+
+    var audioBuffer = await loadSample(sample);
+    const gainNode = audioCtx.createGain()
+    gainNode.gain.value = soundData['gain']
+    panner.connect(gainNode).connect(audioCtx.destination);
+
+    soundID = soundData['sample'] + globalSampleNumber//needs to be made unique
+    activeSounds[soundID] = {'panner': panner, 'audioBuffer': audioBuffer, 
+    'sleep': soundData['sleep'], 'gainNode': gainNode, 'sampleName': sample, 'x':x, 'y':y,'z':z}
+
+    addSoundVisual(soundID)
+    playSound(soundID)
+
+
+}
+
+async function playSound(soundID){ // x,y, z, sample, rest
+    if(activeSounds[soundID]){
+        let soundData = activeSounds[soundID]
+        let activePanner = soundData['panner']
+        activePanner.positionX.value = parseFloat(soundData['x']) - walkerPosition['x']
+        activePanner.positionY.value = parseFloat(soundData['y']) - walkerPosition['y']
+        activePanner.positionZ.value = parseFloat(soundData['z']) - walkerPosition['z']
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = soundData['audioBuffer']
+        source.connect(activePanner)
+        source.start(audioCtx.currentTime);
+        let sleepValue = soundData['sleep']
+        setTimeout(function(){playSound(soundID)}, sleepValue*1000)
+    }
+
+    //Recursive function, called every rest
+    
+    
+}
+
+
+function initAudio(){
+    audioCtx = new AudioContext()
+}
+async function loadBuffer(bufferURL) {
+    try{
+      const response = await fetch(bufferURL);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      return audioBuffer;
+    }catch{
+      console.log("Error in loading Buffer")
+  
+      return null;
+    }
+}
+async function loadSample(bufferURL){
+    sampleRoute = 'samples/' + bufferURL + ".wav"
+    sample = await loadBuffer(sampleRoute)
+    return sample
+}
+
+
+
+
+updatewalk.addEventListener('click', function(){
     if(!audioCtx){
         initAudio()
+        generateWalker(getWalkerElements())
+    }else{ 
+        updateWalker(getWalkerElements())    
+    }
+}, false)
+addobject.addEventListener('click', function(){
+    if(!audioCtx){
+        console.log("ERROR: ATTEMPTED TO GENERATE OBJECT w/out WALKER")
     }else{
-        if(codeCheck()){
-            iterCounter+=1
-            qi.innerHTML = "Queued Iteration: " + iterCounter
-        }else{
-
-        }
+        generateSound(getSoundElements())
     }
-  
-});
-function codeCheck(){ 
-    var code = document.getElementById('code').value;
-    lineCount = 0
-    let notes = code.split("\n");
+})
+function getWalkerElements(){
+    ws = walkspeed.value
+    wt = walktype.value
+    waxy = xywalkangle.value
+    wayz = yzwalkangle.value
+    wg = walkgain.value
+    wsi = walksize.value
 
-    for (note of notes){
-        lineCount+=1
-        noteData = note.split("@");
-        if (note == ""){
-            continue
-        }
-        if(noteData.length != 3){
-            console.log("IMPROPER NUMBER OF ENTRIES")
-            error.innerHTML = "Error: IMPROPER NUMBER OF ENTRIES ON LINE " + lineCount
-            return false
-        }else if(!noteData[0] || !loadBuffer("samples/" +noteData[0]+".wav")){
-            console.log("INVALID SAMPLE ENTRY")
-            error.innerHTML = "Error: INVALID SAMPLE ENTRY ON LINE " + lineCount
+    return {'pace': ws, 'sample': wt, 'xyangle': waxy, 'yzangle': wayz, 'gain': wg, 'stepSize': wsi}
+}
 
-            return false
+function getSoundElements(){
+    os = objectspeed.value
+    ot = objecttype.value
+    og = objectgain.value
+    x = objectx.value
+    y = objecty.value
+    z = objectz.value
 
-        }else if(typeof eval(noteData[1]) != "number"){
-            console.log("PLEASE ENTER NUMBER FOR GAIN")
-            error.innerHTML = "Error: PLEASE ENTER NUMBER FOR GAIN ON LINE " + lineCount
+    return {'x':x,'y':y,'z':z,'sample':ot,'sleep':os, 'gain': og}
 
-            return false
+}
 
-        }else if(typeof eval(noteData[1]) != "number"){
-            console.log("PLEASE ENTER NUMBER FOR SLEEP")
-            error.innerHTML = "Error: PLEASE ENTER NUMBER FOR SLEEP ON LINE " + lineCount
+function addSoundVisual(soundID){
+    soundData = activeSounds[soundID]
 
-            return false
-
-        }
-    }
-    return true
+    const demoDiv = document.getElementById("object-list");
+    const objectDiv = document.createElement("div")
+    const btn = document.createElement("BUTTON");
+    const newline = document.createElement("p")
+    objectDiv.id = soundID;
+    const node = document.createTextNode(soundData['sampleName'] + "(" + soundData['x'] + "," + soundData['y'] + "," + soundData["z"] +")");//set text w/ button information
     
+    newline.appendChild(node)
+    btn.innerHTML = "Delete Entry";
 
-}
-
-async function initAudio(){
-    audioCtx = new AudioContext() 
-    if(codeCheck()){
-        iterCounter+=1
-        qi.innerHTML = "Queued Iteration: " + iterCounter
-        reevaluate()
-    }else{
-    }
-     
-}
-
-async function playProgram(){  
-    ci.innerHTML = "Current Iteration: " + iterCounter
-    numTimeOuts = Object.keys(activeTimeOuts).length
-    console.log("Starting new Iteration: " + iterCounter)
-    liveCodeState.forEach(noteData => {
-        id = setTimeout(function(){playSample(noteData)}, noteData["sleep"]*1000)
-        activeTimeOuts[noteData["url"]] = id;
-    });
-   
-}
-async function playSample(data){
-
-    console.log(data["url"])
-    var audioBuffer = await loadBuffer(data["url"]);
-    const source = audioCtx.createBufferSource();
-    const sourceGain = audioCtx.createGain()
-    sourceGain.gain.value = data["gain"]
     
-    source.connect(sourceGain).connect(audioCtx.destination);
-    source.buffer = audioBuffer;
+    btn.onclick = function(){
+        const visual = document.getElementById(soundID)
+        delete activeSounds[soundID]
+        visual.remove()
+    };
+    objectDiv.appendChild(newline);
+    objectDiv.appendChild(btn);
+    demoDiv.appendChild(objectDiv);
 
-    source.start(audioCtx.currentTime);
-    sleepValue = data["sleep"]
-    id = setTimeout(function(){playSample(data)}, sleepValue*1000)
+}
+
+function updateWalkerWriting(){
+    xPos = Math.round(walkerPosition['x'] *100)/100
+    yPos = Math.round(walkerPosition['y'] *100)/100
+    zPos = Math.round(walkerPosition['z'] *100)/100
+
+    walkerposP.innerHTML = "X: " +xPos + " Y: " + yPos + " Z: " + zPos
+}
+
+const xCanvas = document.getElementById('xCanvas')
+const yCanvas = document.getElementById('yCanvas')
+const zCanvas = document.getElementById('zCanvas')
+
+const xCtx = xCanvas.getContext('2d')
+const yCtx = yCanvas.getContext('2d')
+const zCtx = zCanvas.getContext('2d')
+const felixImg = document.getElementById('felix')
+const cricketImg = document.getElementById('cricket')
+const dogImg = document.getElementById('dog')
+const birdImg = document.getElementById('bird')
+const whisperImg = document.getElementById('whisper')
+const hammerImg = document.getElementById('hammer')
+
+function clearCanvas(canvas, ctx){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+function drawOnCanvas(canvas, ctx, image, scale, xOffset, yOffset){
+    //rewrite to be a generalize drawing w/ point
+    var imgWidth = image.naturalWidth;
+    var screenWidth  = canvas.width;
     
-    if(iterCounter != data["iter"]){
-        deleteTimeOuts[data["url"]] = id
-        delete activeTimeOuts[data["url"]]
-        if(Object.keys(activeTimeOuts).length <1 ){
-            reevaluate()
+    var imgHeight = image.naturalHeight;
+    var screenHeight = canvas.height;
+
+    imgHeight = imgHeight*scale;
+    imgWidth = imgWidth*scale;          
+
+    ctx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, screenWidth*xOffset, screenHeight*yOffset, imgWidth, imgHeight);
+
+}
+window.onload = function(){
+
+drawOnCanvas(xCanvas,xCtx, felixImg, 0.05, 1/2, 1/3)
+
+drawOnCanvas(yCanvas,yCtx, felixImg, 0.05, 1/2, 1/3)
+drawOnCanvas(zCanvas,zCtx, felixImg, 0.05, 1/2, 1/3)
+
+}
+var siMap ={'bird_chirp':birdImg,'cricket': 
+        cricketImg, 'dog_bark': dogImg,
+    'secret_whisper': whisperImg, 'layered_whisper': whisperImg,
+    'hammering': hammerImg, 'wet_step': felixImg, 'wood_step': felixImg,
+    'clap': felixImg}
+function checkRelativeDistance(){
+    xwPos = walkerPosition['x']
+    ywPos = walkerPosition['y']
+    zwPos = walkerPosition['z']
+    //clear x, y, z canvas, re-add felix ontop
+    clearCanvas(xCanvas, xCtx)
+    clearCanvas(yCanvas, yCtx)
+    clearCanvas(zCanvas, zCtx)
+    drawOnCanvas(xCanvas,xCtx, felixImg, 0.05, 1/2, 1/3)
+    drawOnCanvas(yCanvas,yCtx, felixImg, 0.05, 1/2, 1/3)
+    drawOnCanvas(zCanvas,zCtx, felixImg, 0.05, 1/2, 1/3)
+    for (const [key, value] of Object.entries(activeSounds)) {
+        xDiff = value['x'] - xwPos
+        yDiff = value['y'] - ywPos
+        zDiff = value['z'] - zwPos
+
+        console.log('sample: ' + value['sampleName'])
+        if(Math.abs(xDiff) < displayWidth){
+            drawOnCanvas(xCanvas, xCtx, siMap[value['sampleName']], 0.1, 1/2 +(xDiff/displayWidth)/2,1/3)
         }
-    }else{
-        activeTimeOuts[data["url"]] = id;
-    }
-    
-}
-
-function parseCode(code) {
-    let notes = code.split("\n");
-    lnc =0 
-    for(note of notes){
-        lnc+=1
-        if(note == ""){
-            notes.pop(lnc)
+        if(Math.abs(yDiff) <displayWidth){
+            drawOnCanvas(yCanvas, yCtx, siMap[value['sampleName']], 0.1, 1/2 +(yDiff/displayWidth)/2,1/3)
         }
-    }
-    notes = notes.map(note => {
-        
-        noteData = note.split("@");
+        if(Math.abs(zDiff) <displayWidth){
+            drawOnCanvas(zCanvas, zCtx, siMap[value['sampleName']], 0.1, 1/2 +(zDiff/displayWidth)/2,1/3)
 
-        return   {"url" : "samples/" +noteData[0] + ".wav", 
-                "gain" : eval(noteData[1]),
-                "sleep": eval(noteData[2]),
-                "iter": iterCounter
-                };
-    });
-    return notes;
+        }
+      }    
 }
-
-function genAudio(data) {
-        liveCodeState = data;
-}
-
-function reevaluate() {
-    var code = document.getElementById('code').value;
-    var data = parseCode(code);
-    genAudio(data);
-    deleteOldTimeOuts()
-    playProgram();
-}
-
-function deleteOldTimeOuts() {
-    for([key, value] of Object.entries(deleteTimeOuts)){
-        clearTimeout(value)
-    }
-    deleteTimeOuts= {}
-}
-/*
-//God I wish this worked
-async function loadAllSamples(){
-    samples = {}
-    clapBuffer =loadBuffer('clap.wav')
-    eHum = loadBuffer('vending_machine.mp3')
-
-    samples['clap'] = clapBuffer
-    samples['eHum'] = eHum
-}
-*/
