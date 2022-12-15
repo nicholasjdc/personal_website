@@ -4,6 +4,25 @@ var activeSounds = {}
 var walkerPosition = {'x':0,'y':0,'z':0} //store 'x', 'y', and 'z' velocity of the walker
 var globalSampleNumber = 0
 
+const walkspeed = document.getElementById("walkspeed")
+const walksize = document.getElementById("walksize")
+const walktype = document.getElementById("walktype")
+const xywalkangle = document.getElementById("xywalkangle")
+const yzwalkangle = document.getElementById("yzwalkangle")
+
+const walkgain = document.getElementById('walkgain')
+const addObject = document.getElementById("addobject")
+
+const objectspeed = document.getElementById("objectspeed")
+const objecttype = document.getElementById('objecttype')
+const objectgain = document.getElementById('objectgain')
+const objectx = document.getElementById('objectx')
+const objecty = document.getElementById('objecty')
+const objectz = document.getElementById('objectz')
+const addobject = document.getElementById('addobject')
+
+const walkerposP = document.getElementById('walkerposition')
+const updatewalk = document.getElementById('updatewalk') //button
 
 const displayWidth = 20
 //TO-DO:
@@ -14,6 +33,8 @@ const displayWidth = 20
 //start walk on startup
 
 //WALKER FUNCTIONS
+initAudio()
+generateWalker(getWalkerElements())
 async function generateWalker(walkerData){
     globalSampleNumber++
 
@@ -87,8 +108,9 @@ async function updateWalker(walkerData){
     zAngle = stepSize * Math.sin(yzrot * Math.PI /180)
 
     console.log('xyrot: ' + xyrot + 'cos(xyrot): ' +Math.cos(xyrot))
+
     var audioBuffer = await loadSample(sample);
-    
+    //CHANGE walk gain adjustment
     var walkGain = audioCtx.createGain()
     walkGain.gain.setValueAtTime(walkerData['gain'], audioCtx.currentTime)
     walkGain.connect(audioCtx.destination)
@@ -179,41 +201,16 @@ async function loadSample(bufferURL){
 }
 
 
-const walkspeed = document.getElementById("walkspeed")
-const walksize = document.getElementById("walksize")
-const walktype = document.getElementById("walktype")
-const xywalkangle = document.getElementById("xywalkangle")
-const yzwalkangle = document.getElementById("yzwalkangle")
-
-const walkgain = document.getElementById('walkgain')
-const addObject = document.getElementById("addobject")
-const start = document.getElementById("start")
-
-const objectspeed = document.getElementById("objectspeed")
-const objecttype = document.getElementById('objecttype')
-const objectgain = document.getElementById('objectgain')
-const objectx = document.getElementById('objectx')
-const objecty = document.getElementById('objecty')
-const objectz = document.getElementById('objectz')
-const addobject = document.getElementById('addobject')
-
-const walkerposP = document.getElementById('walkerposition')
 
 
-
-start.addEventListener('click', function(){
+updatewalk.addEventListener('click', function(){
     if(!audioCtx){
         initAudio()
         generateWalker(getWalkerElements())
-    }else{
-        if(Object.keys(activeSounds).length > 0){
-            activeSounds = {}
-        }else{
-            updateWalker(getWalkerElements())
-        }
+    }else{ 
+        updateWalker(getWalkerElements())    
     }
 }, false)
-
 addobject.addEventListener('click', function(){
     if(!audioCtx){
         console.log("ERROR: ATTEMPTED TO GENERATE OBJECT w/out WALKER")
@@ -288,7 +285,12 @@ const felixImg = document.getElementById('felix')
 const cricketImg = document.getElementById('cricket')
 const dogImg = document.getElementById('dog')
 const birdImg = document.getElementById('bird')
+const whisperImg = document.getElementById('whisper')
+const hammerImg = document.getElementById('hammer')
 
+function clearCanvas(canvas, ctx){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 function drawOnCanvas(canvas, ctx, image, scale, xOffset, yOffset){
     //rewrite to be a generalize drawing w/ point
     var imgWidth = image.naturalWidth;
@@ -312,16 +314,26 @@ drawOnCanvas(zCanvas,zCtx, felixImg, 0.05, 1/2, 1/3)
 
 }
 var siMap ={'bird_chirp':birdImg,'cricket': 
-        cricketImg, 'dog_bark': dogImg}
+        cricketImg, 'dog_bark': dogImg,
+    'secret_whisper': whisperImg, 'layered_whisper': whisperImg,
+    'hammering': hammerImg, 'wet_step': felixImg, 'wood_step': felixImg,
+    'clap': felixImg}
 function checkRelativeDistance(){
     xwPos = walkerPosition['x']
     ywPos = walkerPosition['y']
     zwPos = walkerPosition['z']
-
+    //clear x, y, z canvas, re-add felix ontop
+    clearCanvas(xCanvas, xCtx)
+    clearCanvas(yCanvas, yCtx)
+    clearCanvas(zCanvas, zCtx)
+    drawOnCanvas(xCanvas,xCtx, felixImg, 0.05, 1/2, 1/3)
+    drawOnCanvas(yCanvas,yCtx, felixImg, 0.05, 1/2, 1/3)
+    drawOnCanvas(zCanvas,zCtx, felixImg, 0.05, 1/2, 1/3)
     for (const [key, value] of Object.entries(activeSounds)) {
         xDiff = value['x'] - xwPos
         yDiff = value['y'] - ywPos
         zDiff = value['z'] - zwPos
+
         console.log('sample: ' + value['sampleName'])
         if(Math.abs(xDiff) < displayWidth){
             drawOnCanvas(xCanvas, xCtx, siMap[value['sampleName']], 0.1, 1/2 +(xDiff/displayWidth)/2,1/3)
