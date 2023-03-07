@@ -1,11 +1,23 @@
 <iframe width="420" height="315"
 src="https://www.youtube.com/embed/BCsUZ3LAw1E" allowfullscreen>
 </iframe>
+<p>Inspiration:
+    In Computational Sound, the class was shown a variety of projects that implement John Conway’s Game of Life. Although I did not explore the program in the class, I remembered the program, and wanted to use the algorithm in a future project.
+    </p>
+    <p>
+        Vision and Implementation:
+        By starting the game of life in the formation of the word Life, I thought it provided the viewer with a generative scene, allowing them to project their own meanings onto the work. For my own part I was interested in the relation between the molecular and molar in life, how all the little bits work to form big bits, those big bits even bigger bits, and so on and so forth. In the game of life, there is a seemingly molecular independence, as squares die and come alive, as well as a clear molar investment, as population clusters begin to form in different areas of the game. This is why I included a passage from Walt Whitman’s “I Sing the Body Electric,” as I think he explores similar themes of molecular independence and molar investment. I also just thought it was funny because the ESP32 is an “electric body”.
+        
+    </p>
+    <p>
+        Technical Issues:
+        I ran into a couple of technical issues when working on this project. I had to replace two ESPs throughout this project. The first ESP I fried from incorrectly plugging in the battery. The second ESP could not be recognized by my usb-port, and the conclusion of people with similar issues as mine was to get a new ESP. The third ESP worked like a charm. Code-wise, the initial code was a pile of spaghetti. It sometimes worked and sometimes didn’t, and after ~2 or 3 minutes of operation would always end up breaking. This is the flashed code I brought to class on the day of the presentation, and it did not work, leaving the screen entirely white. I believe the source of this bug was in the part of the algorithm that killed off cells, maybe malfunctioning given certain circumstances. I am not sure about the exact source of the bug because instead of bug fixing I totally rewrote the code, segmenting off each section into its own function instead of piling everything into loop. Now, the code works as expected every time, and after around 5 minutes the game reaches a stable, repeating state. 
+   
+    </p>
+    <p></p>
 <a href = "https://github.com/nicholasjdc/Embedded_Systems/tree/main/Game_Of_Life">
     github
 </a>
 <p></p>
-<form action="blogpost.html">
-    <input type="submit" value="Blog Post" />
-</form>
+
 <p></p>
