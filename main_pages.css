@@ -119,3 +119,17 @@ a:hover {
 .non_bold_subtitle{
     text-align: center;
 }
+.poem_text{
+    font-family:'Courier New', Courier, monospace;
+    text-align: center;
+}
+.poem_block{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    width: 50%;
+    height:40px;
+    margin: 0px auto;
+    justify-content: space-evenly;
+    align-items: center;
+}
