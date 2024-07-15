@@ -1,6 +1,7 @@
 body{
   background: black;
   color: white;
+  padding-bottom: 10%
 }
 img{
   width:381px;
@@ -8,5 +9,8 @@ img{
 }
 
 a:visited{
+  color:white;
+}
+a{
   color:white;
 }
