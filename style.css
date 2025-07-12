@@ -4,7 +4,10 @@ body{
   padding-bottom: 10%
 }
 
-
+.general-image{
+  width: 700px;
+  height:  300px;
+}
 a:visited{
   color:white;
 }
